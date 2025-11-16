@@ -34,3 +34,10 @@ def admin_dashboard():
     with tabs[3]:
         st.subheader("System Logs")
         st.write("All admin activities will be tracked here.")
+
+# ------------------------------
+# MAIN EXECUTION
+# ------------------------------
+if __name__ == "__main__":
+    admin_dashboard()
+
