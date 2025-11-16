@@ -140,8 +140,10 @@ def student_dashboard():
         else:
             st.info("You are connected.")
 
-    if __name__ == "__main__":
+if __name__ == "__main__":
     student_dashboard()
+    
+   
 
     # ------------------------------
     # FOOTER
