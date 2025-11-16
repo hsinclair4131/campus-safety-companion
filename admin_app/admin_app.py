@@ -45,31 +45,35 @@ def admin_dashboard():
     # --------------------------------------------------------------------
     # USER LOCATIONS – COMMAND CENTER MAP
     # --------------------------------------------------------------------
-   with tabs[2]:
-    st.subheader("📍 Real-time GPS Tracking – Command Center Map")
+       # --------------------------------------------------------------------
+    # USER LOCATIONS – COMMAND CENTER MAP
+    # --------------------------------------------------------------------
+    with tabs[2]:
+        st.subheader("📍 Real-time GPS Tracking – Command Center Map")
 
-    # Day/Night Toggle
-    mode = st.radio(
-        "Select Map Mode:",
-        ["🌙 Night Ops", "☀️ Day Ops"],
-        horizontal=True
-    )
+        # Day/Night Toggle
+        mode = st.radio(
+            "Select Map Mode:",
+            ["🌙 Night Ops", "☀️ Day Ops"],
+            horizontal=True
+        )
 
-    if mode == "🌙 Night Ops":
-        map_tiles = "CartoDB dark_matter"
-    else:
-        map_tiles = "CartoDB positron"  # clean white daytime map
+        if mode == "🌙 Night Ops":
+            map_tiles = "CartoDB dark_matter"
+        else:
+            map_tiles = "CartoDB positron"  # clean white daytime map
 
-    # Campus center coords
-    ecsu_lat, ecsu_lon = 36.2796, -76.2130
+        # Campus center coords
+        ecsu_lat, ecsu_lon = 36.2796, -76.2130
 
-    # Tactical map WITH mode toggle
-    map_admin = folium.Map(
-        location=[ecsu_lat, ecsu_lon],
-        zoom_start=17,
-        tiles=map_tiles,
-        control_scale=True
-    )
+        # Tactical map WITH mode toggle
+        map_admin = folium.Map(
+            location=[ecsu_lat, ecsu_lon],
+            zoom_start=17,
+            tiles=map_tiles,
+            control_scale=True
+        )
+
 
     # --------------------------------------------------------------------
     # SYSTEM LOGS
