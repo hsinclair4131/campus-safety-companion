@@ -1,19 +1,28 @@
 import streamlit as st
 from admin_app.admin_app import admin_dashboard
-from student_app.student_app import student_home
+from student_app.student_app import student_dashboard
 
-st.set_page_config(page_title="Campus Safety Companion", layout="wide")
+# ------------------------------
+# APP SELECTOR
+# ------------------------------
 
-st.title("Campus Safety Companion (CSC)")
+st.set_page_config(
+    page_title="Campus Safety Companion",
+    layout="wide",
+    page_icon="🛡️"
+)
 
-menu = st.sidebar.selectbox(
-    "Choose App View",
+st.title("🛡️ Campus Safety Companion (CSC)")
+
+st.markdown("Choose which interface you want to open:")
+
+mode = st.selectbox(
+    "Select App Mode:",
     ["Student App", "Admin Dashboard"]
 )
 
-if menu == "Student App":
-    student_home()
+if mode == "Student App":
+    student_dashboard()
 
-elif menu == "Admin Dashboard":
+elif mode == "Admin Dashboard":
     admin_dashboard()
-
