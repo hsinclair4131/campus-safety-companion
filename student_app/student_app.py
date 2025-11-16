@@ -92,18 +92,34 @@ def student_dashboard():
 
         st.divider()
 
-    # ------------------------------
-    # CAMPUS MAP
+        # ------------------------------
+    # CAMPUS MAP (LIVE INTERACTIVE)
     # ------------------------------
     with left:
         st.subheader("🗺️ Interactive Campus Map")
 
-        st.markdown("*(Full interactive map coming soon – placeholder loaded.)*")
+        # Import mapping tools
+        import folium
+        from streamlit_folium import st_folium
 
-        st.image(
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Placeholder_map.jpg/640px-Placeholder_map.jpg",
-            caption="Campus Safety Map – Zones, call boxes, and hazards will appear here.",
-        )
+        # Center of ECSU Campus
+        ecsu_lat = 36.2796
+        ecsu_lon = -76.2131
+
+        # Create folium map
+        campus_map = folium.Map(location=[ecsu_lat, ecsu_lon], zoom_start=16)
+
+        # Add a marker (Gilchrist Hall)
+        folium.Marker(
+            [ecsu_lat, ecsu_lon],
+            popup="ECSU — Gilchrist Hall",
+            tooltip="Campus Center",
+            icon=folium.Icon(color="blue", icon="info-sign")
+        ).add_to(campus_map)
+
+        # Render the interactive map
+        st_folium(campus_map, width=700, height=450)
+
 
     # ------------------------------
     # RIGHT COLUMN – NEWS + OFFLINE MODE
