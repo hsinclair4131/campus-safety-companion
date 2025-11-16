@@ -5,7 +5,7 @@ from datetime import datetime
 from streamlit_folium import st_folium
 import folium
 
-# Page config stays OUTSIDE the function
+# Page config
 st.set_page_config(
     page_title="CSC Admin Dashboard",
     page_icon="🚓",
@@ -16,7 +16,13 @@ def admin_dashboard():
     st.title("🚓 CSC ADMIN DASHBOARD")
     st.markdown("ECSU Police & Dispatch Control Panel")
 
-    tabs = st.tabs(["Live Alerts", "Reports", "User Locations", "System Logs"])
+    tabs = st.tabs([
+        "Live Alerts",
+        "Reports",
+        "User Locations",
+        "System Logs",
+        "Drone Deployment — A.L.I.C.E."
+    ])
 
     # --------------------------------------------------------------------
     # LIVE ALERTS
@@ -42,23 +48,21 @@ def admin_dashboard():
     with tabs[2]:
         st.subheader("📍 Real-time GPS Tracking – Command Center Map")
 
-        # ECSU center coords
         ecsu_lat, ecsu_lon = 36.2796, -76.2130
 
-        # Create tactical map
         map_admin = folium.Map(
             location=[ecsu_lat, ecsu_lon],
             zoom_start=17,
-            tiles="CartoDB dark_matter",   # Tactical theme
+            tiles="CartoDB dark_matter",
             control_scale=True
         )
 
-        # --- Create LayerGroups ---
+        # Layer groups
         sos_layer = folium.FeatureGroup(name="🚨 Student SOS Alerts")
         police_layer = folium.FeatureGroup(name="🚓 Police Patrol Units")
         zones_layer = folium.FeatureGroup(name="🛑 Restricted / Threat Zones")
 
-        # --- Example SOS Alerts (Prototypes) ---
+        # Example SOS alerts
         example_users = [
             {"name": "Student A", "lat": 36.2799, "lon": -76.2135},
             {"name": "Student B", "lat": 36.2804, "lon": -76.2128},
@@ -76,14 +80,14 @@ def admin_dashboard():
                 popup=f"🚨 SOS from {u['name']}"
             ).add_to(sos_layer)
 
-        # --- Police HQ Marker ---
+        # Police HQ
         folium.Marker(
             location=[36.2792, -76.2140],
             popup="🚓 Campus Police HQ",
             icon=folium.Icon(color="blue", icon="star")
         ).add_to(police_layer)
 
-        # --- Hazard Zone Example ---
+        # Hazard Zone
         folium.Polygon(
             locations=[
                 [36.2795, -76.2135],
@@ -96,15 +100,12 @@ def admin_dashboard():
             popup="⚠ Potential Risk Area"
         ).add_to(zones_layer)
 
-        # Add layers to the map
         sos_layer.add_to(map_admin)
         police_layer.add_to(map_admin)
         zones_layer.add_to(map_admin)
 
-        # Enable layer toggles
         folium.LayerControl(collapsed=False).add_to(map_admin)
 
-        # Render map in Streamlit (large)
         st_folium(
             map_admin,
             width=1400,
@@ -118,9 +119,96 @@ def admin_dashboard():
         st.subheader("System Logs")
         st.write("All admin activities will be tracked here.")
 
+    # --------------------------------------------------------------------
+    # DRONE DEPLOYMENT — A.L.I.C.E.
+    # --------------------------------------------------------------------
+    with tabs[4]:
+        st.subheader("🛸 Drone Deployment — Managed by A.L.I.C.E.")
+        st.markdown("Autonomous UAV Command Center")
+
+        # Drone registry
+        drone_ids = [f"Drone {i+1}" for i in range(10)]
+
+        drone_data = pd.DataFrame({
+            "Drone ID": drone_ids,
+            "Status": ["Idle", "Charging", "In-Flight", "Idle", "Returning",
+                       "Offline", "In-Flight", "Charging", "Idle", "Idle"],
+            "Mission": [
+                "None", "None", "Surveillance", "None", "Return to Base",
+                "None", "Perimeter Scan", "None", "None", "None"
+            ],
+            "Battery (%)": [96, 45, 78, 83, 52, 0, 67, 39, 90, 88]
+        })
+
+        st.markdown("### Registered UAV Units")
+        st.dataframe(drone_data, use_container_width=True)
+
+        # ------------------------------------------
+        # DEPLOY DRONE (with battery check)
+        # ------------------------------------------
+        st.markdown("---")
+        st.markdown("## 🚀 Deploy Drone (A.L.I.C.E. Safety Pre-check)")
+
+        selected_drone = st.selectbox("Select UAV", drone_ids)
+        mission = st.selectbox("Mission Type", [
+            "Surveillance",
+            "Escort",
+            "SOS Response",
+            "Thermal Sweep",
+            "Perimeter Scan",
+            "Recon",
+            "Payload Delivery"
+        ])
+
+        if st.button("Deploy Drone"):
+            drone_row = drone_data[drone_data["Drone ID"] == selected_drone].iloc[0]
+            battery = drone_row["Battery (%)"]
+
+            if battery < 20:
+                st.error(f"❌ Deployment Denied — {selected_drone} battery at {battery}%.")
+                st.warning("A.L.I.C.E.: Drone must be charged before launch.")
+            elif drone_row["Status"] not in ["Idle", "Charging"]:
+                st.error(f"❌ Deployment Denied — {selected_drone} not available.")
+            else:
+                st.success(f"🛸 {selected_drone} launching for **{mission}** mission.")
+                st.info("A.L.I.C.E. executing autonomous routing and telemetry.")
+
+        # ------------------------------------------
+        # RECOVER DRONE
+        # ------------------------------------------
+        st.markdown("---")
+        st.markdown("## 🛬 Recover Drone")
+
+        recover_drone = st.selectbox("Select UAV to Recover", drone_ids)
+
+        if st.button("Recover Selected Drone"):
+            st.warning(f"📡 A.L.I.C.E. issuing RTB for {recover_drone}...")
+            st.success(f"🛸 {recover_drone} successfully recovered. Status: **Idle**")
+
+        # ------------------------------------------
+        # CHARGE DRONE
+        # ------------------------------------------
+        st.markdown("## 🔋 Charge Drone")
+
+        charge_drone = st.selectbox("Select UAV to Charge", drone_ids)
+
+        if st.button("Charge Selected Drone"):
+            st.info(f"🔌 Charging initiated for {charge_drone}...")
+            st.success(f"🔋 {charge_drone} battery restored to 100%")
+
+        # ------------------------------------------
+        # EMERGENCY GLOBAL RECALL
+        # ------------------------------------------
+        st.markdown("---")
+        st.markdown("## 🚨 Emergency Recall (All UAVs)")
+
+        if st.button("Recall ALL Drones Immediately"):
+            st.error("⚠ EMERGENCY RECALL ACTIVATED")
+            st.warning("A.L.I.C.E.: Broadcasting universal RTB command...")
+            st.success("🛸 All drones returning to base.")
+
 # ------------------------------
-# MAIN EXECUTION
+# MAIN
 # ------------------------------
 if __name__ == "__main__":
     admin_dashboard()
-
