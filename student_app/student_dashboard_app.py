@@ -20,49 +20,18 @@ st.set_page_config(
     layout="wide"
 )
 
-# AUTO REFRESH EVERY 5 SECONDS
-st_autorefresh = st.experimental_rerun  # placeholder alias
-st_autorefresh = st.experimental_rerun
-
-st_autorefresh = st.experimental_rerun
-
-# Streamlit’s built-in auto-refresh:
-st_autorefresh = st.experimental_rerun
-count = st.experimental_rerun
-
-st_autorefresh_count = st.experimental_memo.clear()
-st_autorefresh = st.experimental_rerun
-
-st_autorefresh = st.experimental_rerun
-st_autorefresh_count = st.experimental_rerun
-
-# True auto-refresh:
-st_autorefresh = st.experimental_rerun
-st_autorefresh = st.experimental_rerun
-
-# CLEAN VERSION (THIS IS THE ONE THAT MATTERS)
-st_autorefresh_count = st.experimental_rerun
-st.experimental_rerun
-
-# Final working refresh:
-st_autorefresh = st.experimental_rerun
-st_autorefresh_count = st.experimental_rerun
-
-# Working refresh code:
-st_autorefresh = st.experimental_rerun
-st_autorefresh_count = st.experimental_rerun
-
-# FINAL: use this one
-st_autorefresh_every_5s = st.experimental_rerun
-
+# --------------------------------------------------------------
+# AUTO REFRESH EVERY 5 SECONDS (SAFE METHOD)
+# --------------------------------------------------------------
+st.markdown(
+    "<meta http-equiv='refresh' content='5'>",
+    unsafe_allow_html=True
+)
 
 # --------------------------------------------------------------
 # MAIN STUDENT DASHBOARD
 # --------------------------------------------------------------
 def student_dashboard():
-
-    # Auto-refresh every 5 seconds
-    st_autorefresh_every_5s()
 
     st.title("🛡️ Campus Safety Companion – Student App")
     st.markdown("Your personal safety assistant for ECSU.")
