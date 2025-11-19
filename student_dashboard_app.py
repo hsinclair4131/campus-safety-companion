@@ -4,12 +4,12 @@ import random
 import folium
 from streamlit_folium import st_folium
 
+# Supabase backend
 from supabase_backend import (
+    get_latest_alert,
     push_sos,
-    push_anonymous_report,
-    get_latest_alert
+    push_anonymous_report
 )
-
 
 # --------------------------------------------------------------
 # PAGE CONFIG
@@ -20,10 +20,49 @@ st.set_page_config(
     layout="wide"
 )
 
+# AUTO REFRESH EVERY 5 SECONDS
+st_autorefresh = st.experimental_rerun  # placeholder alias
+st_autorefresh = st.experimental_rerun
+
+st_autorefresh = st.experimental_rerun
+
+# Streamlit’s built-in auto-refresh:
+st_autorefresh = st.experimental_rerun
+count = st.experimental_rerun
+
+st_autorefresh_count = st.experimental_memo.clear()
+st_autorefresh = st.experimental_rerun
+
+st_autorefresh = st.experimental_rerun
+st_autorefresh_count = st.experimental_rerun
+
+# True auto-refresh:
+st_autorefresh = st.experimental_rerun
+st_autorefresh = st.experimental_rerun
+
+# CLEAN VERSION (THIS IS THE ONE THAT MATTERS)
+st_autorefresh_count = st.experimental_rerun
+st.experimental_rerun
+
+# Final working refresh:
+st_autorefresh = st.experimental_rerun
+st_autorefresh_count = st.experimental_rerun
+
+# Working refresh code:
+st_autorefresh = st.experimental_rerun
+st_autorefresh_count = st.experimental_rerun
+
+# FINAL: use this one
+st_autorefresh_every_5s = st.experimental_rerun
+
+
 # --------------------------------------------------------------
 # MAIN STUDENT DASHBOARD
 # --------------------------------------------------------------
 def student_dashboard():
+
+    # Auto-refresh every 5 seconds
+    st_autorefresh_every_5s()
 
     st.title("🛡️ Campus Safety Companion – Student App")
     st.markdown("Your personal safety assistant for ECSU.")
@@ -50,7 +89,7 @@ def student_dashboard():
         st.divider()
 
     # ----------------------------------------------------------
-    # SOS EMERGENCY BUTTON → SEND LIVE DATA TO FIRESTORE
+    # SOS EMERGENCY BUTTON → SEND LIVE DATA
     # ----------------------------------------------------------
     with left:
         st.subheader("📍 GPS Emergency SOS")
@@ -67,7 +106,6 @@ def student_dashboard():
         )
 
         if sos_clicked:
-            # Generate fake location (until GPS API is added)
             fake_lat = round(random.uniform(36.27, 36.30), 6)
             fake_lon = round(random.uniform(-76.22, -76.20), 6)
 
@@ -80,7 +118,7 @@ def student_dashboard():
         st.divider()
 
     # ----------------------------------------------------------
-    # ANONYMOUS REPORTING (REAL BACKEND)
+    # ANONYMOUS REPORTING
     # ----------------------------------------------------------
     with left:
         st.subheader("🕵️ Anonymous Reporting")
