@@ -4,12 +4,12 @@ import random
 import folium
 from streamlit_folium import st_folium
 
-# 🔥 Firebase Backend
-from firebase_backend import (
+from supabase_backend import (
     push_sos,
     push_anonymous_report,
     get_latest_alert
 )
+
 
 # --------------------------------------------------------------
 # PAGE CONFIG
