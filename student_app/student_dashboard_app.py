@@ -4,8 +4,7 @@ import random
 import folium
 from streamlit_folium import st_folium
 
-# 🔥 Firebase Backend
-from firebase_backend import (
+from supabase_backend import (
     push_sos,
     push_anonymous_report,
     get_latest_alert
@@ -150,3 +149,4 @@ def student_dashboard():
 
 if __name__ == "__main__":
     student_dashboard()
+
