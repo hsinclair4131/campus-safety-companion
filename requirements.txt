@@ -1,7 +1,8 @@
 streamlit
 folium
-streamlit-folium
+streamlit_folium
 requests
 Pillow
-fastapi
+firebase-admin
 supabase
+fastapi
