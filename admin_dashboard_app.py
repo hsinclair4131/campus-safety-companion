@@ -1,14 +1,23 @@
-# ADMIN DASHBOARD APP
-import streamlit as st
-
-# Redirect if not logged in
-if "logged_in" not in st.session_state:
-    st.error("You must log in first.")
-    st.stop()
-
+# ADMIN DASHBOARD APP — FULL BACKEND INTEGRATED
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+
+# 🔥 IMPORT FIREBASE BACKEND
+from firebase_backend import (
+    push_alert,
+    get_latest_alert,
+    push_sos,
+    get_all_sos,
+    get_anonymous_reports
+)
+
+# ------------------------------------------------------
+# REDIRECT IF NOT LOGGED IN
+# ------------------------------------------------------
+if "logged_in" not in st.session_state:
+    st.error("You must log in first.")
+    st.stop()
 
 # ------------------------------------------------------
 # PAGE CONFIG
@@ -24,74 +33,101 @@ st.set_page_config(
 # ------------------------------------------------------
 st.title("🚨 CSC Admin Command Center")
 st.markdown("### ECSU Police Department • Real-Time Oversight Dashboard")
-
 st.markdown("---")
 
 # ------------------------------------------------------
-# METRICS ROW (TOP)
+# METRICS ROW
 # ------------------------------------------------------
 col1, col2, col3 = st.columns(3)
 
+# SOS alerts – REAL DATA COUNT
+sos_data = get_all_sos()
+active_sos_count = len(sos_data)
+
+# Students being tracked (currently same as SOS count)
+tracked_students = active_sos_count
+
+# Incident logs from anonymous reports
+incident_logs = get_anonymous_reports()
+incident_count = len(incident_logs)
+
 with col1:
-    st.metric("Active SOS Alerts", 0)
+    st.metric("Active SOS Alerts", active_sos_count)
 
 with col2:
-    st.metric("Students Being Tracked", 0)
+    st.metric("Students Being Tracked", tracked_students)
 
 with col3:
-    st.metric("Incidents Logged Today", 0)
+    st.metric("Incidents Logged Today", incident_count)
 
 st.markdown("---")
 
 # ------------------------------------------------------
-# LIVE SOS FEED
+#  🔥 REAL-TIME SOS FEED
 # ------------------------------------------------------
 st.markdown("### 🚨 Live SOS Alerts Feed")
 
-sos_placeholder = st.empty()
-
-if st.button("Simulate Incoming SOS Alert"):
-    time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    sos_placeholder.error(f"🚨 **SOS Triggered** at {time_now} • Student ID: 12922 • Location: Jenkins Hall")
-
-st.caption("This area will display real-time SOS events when connected to your backend data source.")
+if active_sos_count == 0:
+    st.info("No active SOS alerts at this time.")
+else:
+    for sos in sos_data:
+        ts = sos.get("timestamp", "")
+        lat = sos.get("lat", "")
+        lon = sos.get("lon", "")
+        st.error(f"🚨 **SOS Triggered** • Location: ({lat}, {lon}) • Time: {ts}")
 
 st.markdown("---")
 
 # ------------------------------------------------------
-# GPS MAP PLACEHOLDER
+#  🔥 SEND MANUAL ADMIN ALERT (BRODCAST TO STUDENT APP)
+# ------------------------------------------------------
+st.markdown("### 📢 Send Emergency Broadcast Alert")
+
+alert_message = st.text_input("Enter alert message:")
+
+if st.button("Send Broadcast Alert"):
+    if alert_message.strip():
+        push_alert(alert_message)
+        st.success("🔥 ALERT BROADCASTED TO STUDENTS (LIVE)")
+    else:
+        st.warning("Please enter a message before sending.")
+
+st.markdown("---")
+
+# ------------------------------------------------------
+#  🔥 GPS MAP PLACEHOLDER (NEXT STEP: LIVE LOCATION MAP)
 # ------------------------------------------------------
 st.markdown("### 📍 GPS Tracking Map")
 
 st.info("""
-The live map will display real-time student emergency locations,
-movement history, and heatmap overlays.
-
-**Next Step:** Enable Folium or PyDeck mapping.
+Live map will show real-time student emergency locations.\n
+Next step: Integrate Folium or PyDeck with Firestore sos_reports.
 """)
 
 st.markdown("---")
 
 # ------------------------------------------------------
-# INCIDENT LOG PREVIEW
+#  🔥 REAL INCIDENT LOG PREVIEW
 # ------------------------------------------------------
-st.markdown("### 📝 Recent Incident Log")
+st.markdown("### 📝 Recent Incident Reports (Anonymous)")
 
-# Create a placeholder table for now
-sample_data = {
-    "Timestamp": [datetime.now().strftime("%H:%M:%S")],
-    "Type": ["System Ready"],
-    "Details": ["Awaiting events..."]
-}
+if len(incident_logs) == 0:
+    st.info("No reports submitted yet.")
+else:
+    table_data = []
+    for log in incident_logs:
+        table_data.append({
+            "Timestamp": log.get("timestamp", ""),
+            "Report": log.get("report", "")
+        })
+    
+    df = pd.DataFrame(table_data)
+    st.table(df)
 
-df = pd.DataFrame(sample_data)
-
-st.table(df)
-
-st.caption("This table will update dynamically as reports and SOS events are logged.")
+st.caption("Incident logs update in real time as students submit reports.")
 
 # ------------------------------------------------------
 # FOOTER
 # ------------------------------------------------------
 st.markdown("---")
-st.markdown("##### CSC Admin Dashboard • Streamlit Prototype")
+st.markdown("##### CSC Admin Dashboard • Connected to Live Firebase Backend")
