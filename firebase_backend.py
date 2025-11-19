@@ -1,79 +1,94 @@
-# firebase_backend.py
-# 🔥 Unified Firestore backend for Admin + Student Apps
-
-from firebase_config import get_db
-from firebase_admin import firestore
-
+import os
+import json
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 # -------------------------------------------------------------
-# ADMIN → STUDENT : SEND EMERGENCY ALERT
+#  FIREBASE INITIALIZATION (STREAMLIT SECRETS OR LOCAL JSON)
 # -------------------------------------------------------------
-def send_alert(message: str):
+
+def get_firebase_app():
+    """Initializes Firebase from Streamlit Secrets (cloud) or local JSON (PyCharm)."""
+
+    # Already initialized?
+    if firebase_admin._apps:
+        return firebase_admin.get_app()
+
+    # 1 — Streamlit Cloud Secrets
+    if "serviceAccountKey" in os.environ:
+        try:
+            key_data = json.loads(os.environ["serviceAccountKey"])
+            cred = credentials.Certificate(key_data)
+            return firebase_admin.initialize_app(cred)
+        except Exception as e:
+            print("Streamlit Secrets Firebase Error:", e)
+
+    # 2 — Local Development (PyCharm)
+    if os.path.exists("serviceAccountKey.json"):
+        cred = credentials.Certificate("serviceAccountKey.json")
+        return firebase_admin.initialize_app(cred)
+
+    raise FileNotFoundError("❌ No Firebase service account found!")
+
+def get_db():
+    """Returns Firestore client."""
+    app = get_firebase_app()
+    return firestore.client(app)
+
+# -------------------------------------------------------------
+# ALERT SYSTEM
+# -------------------------------------------------------------
+def push_alert(message: str):
+    """Push emergency alert to Firestore."""
     db = get_db()
-    db.collection("alerts").document("current").set({
+    doc = db.collection("alerts").document("latest")
+    doc.set({
         "message": message,
-        "timestamp": firestore.SERVER_TIMESTAMP
+        "active": True
     })
     return True
 
-
-# -------------------------------------------------------------
-# STUDENT → ADMIN : SEND SOS COORDINATES
-# -------------------------------------------------------------
-def send_sos(uid: str, lat: float, lon: float):
+def get_latest_alert():
+    """Reads latest emergency alert."""
     db = get_db()
-    db.collection("sos_alerts").document(uid).set({
-        "lat": lat,
-        "lon": lon,
-        "timestamp": firestore.SERVER_TIMESTAMP
-    })
-    return True
-
-
-# -------------------------------------------------------------
-# ADMIN SIDE : GET ALL SOS ALERTS
-# -------------------------------------------------------------
-def get_all_sos():
-    db = get_db()
-    docs = db.collection("sos_alerts").stream()
-    return [
-        {
-            "uid": d.id,
-            **d.to_dict()
-        }
-        for d in docs
-    ]
-
-
-# -------------------------------------------------------------
-# STUDENT → ADMIN : SEND ANONYMOUS REPORT
-# -------------------------------------------------------------
-def send_report(text: str):
-    db = get_db()
-    db.collection("reports").add({
-        "text": text,
-        "timestamp": firestore.SERVER_TIMESTAMP
-    })
-    return True
-
-
-# -------------------------------------------------------------
-# ADMIN SIDE : LIST ALL REPORTS
-# -------------------------------------------------------------
-def get_reports():
-    db = get_db()
-    docs = db.collection("reports").order_by("timestamp").stream()
-    return [d.to_dict() for d in docs]
-
-
-# -------------------------------------------------------------
-# STUDENT SIDE : READ LIVE ALERT STATUS
-# -------------------------------------------------------------
-def get_current_alert():
-    db = get_db()
-    doc = db.collection("alerts").document("current").get()
-
+    doc = db.collection("alerts").document("latest").get()
     if doc.exists:
         return doc.to_dict()
+    return None
 
-    return {"message": "All Clear", "timestamp": None}
+# -------------------------------------------------------------
+# SOS SYSTEM
+# -------------------------------------------------------------
+def push_sos(latitude: float, longitude: float):
+    """Students send SOS location."""
+    db = get_db()
+    doc = db.collection("sos_reports").document()
+    doc.set({
+        "lat": latitude,
+        "lon": longitude,
+        "timestamp": firestore.SERVER_TIMESTAMP
+    })
+    return True
+
+def get_all_sos():
+    """Admins read SOS reports."""
+    db = get_db()
+    docs = db.collection("sos_reports").order_by("timestamp", direction=firestore.Query.DESCENDING).stream()
+    return [d.to_dict() for d in docs]
+
+# -------------------------------------------------------------
+# ANONYMOUS REPORTS
+# -------------------------------------------------------------
+def push_anonymous_report(text: str):
+    db = get_db()
+    doc = db.collection("anonymous_reports").document()
+    doc.set({
+        "report": text,
+        "timestamp": firestore.SERVER_TIMESTAMP
+    })
+    return True
+
+def get_anonymous_reports():
+    db = get_db()
+    docs = db.collection("anonymous_reports").order_by("timestamp", direction=firestore.Query.DESCENDING).stream()
+    return [d.to_dict() for d in docs]
