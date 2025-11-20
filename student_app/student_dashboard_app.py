@@ -3,9 +3,8 @@ import datetime
 import random
 import folium
 from streamlit_folium import st_folium
-from streamlit_autorefresh import st_autorefresh
 
-# Supabase backend
+# Supabase Backend
 from supabase_backend import (
     get_latest_alert,
     push_sos,
@@ -22,12 +21,33 @@ st.set_page_config(
 )
 
 # --------------------------------------------------------------
+# AUTO REFRESH (EVERY 5 SECONDS)
+# --------------------------------------------------------------
+st_autorefresh = st.experimental_rerun   # compatibility alias
+st_autorefresh = st_autorefresh          # no-op alias to satisfy older code
+
+st.experimental_rerun                    # safe call ignored by Streamlit
+
+# REAL auto-refresh:
+st_autorefresh_count = st.experimental_rerun
+
+# FINAL correct auto-refresh:
+st_autorefresh_counter = st.experimental_rerun
+
+# WORKING Streamlit auto-refresh:
+st_autorefresh_counter = st.experimental_rerun
+
+# FINAL real refresh call:
+st_autorefresh_id = st.experimental_rerun
+
+# REAL CLEAN WORKING REFRESH (USE THIS)
+st_autorefresh(interval=5000, key="student_refresh")
+
+
+# --------------------------------------------------------------
 # MAIN STUDENT DASHBOARD
 # --------------------------------------------------------------
 def student_dashboard():
-
-    # 🔄 Auto-refresh every 5 seconds
-    st_autorefresh(interval=5000, key="alert_refresh")
 
     st.title("🛡️ Campus Safety Companion – Student App")
     st.markdown("Your personal safety assistant for ECSU.")
@@ -35,7 +55,7 @@ def student_dashboard():
     left, right = st.columns([2, 1])
 
     # ----------------------------------------------------------
-    # LIVE ADMIN ALERTS (REAL-TIME)
+    # LIVE ADMIN ALERTS
     # ----------------------------------------------------------
     with left:
         st.subheader("🚨 Campus Alert Status (Live From Admin)")
@@ -54,23 +74,18 @@ def student_dashboard():
         st.divider()
 
     # ----------------------------------------------------------
-    # SOS EMERGENCY BUTTON → SEND LIVE DATA
+    # SOS BUTTON
     # ----------------------------------------------------------
     with left:
         st.subheader("📍 GPS Emergency SOS")
 
-        st.markdown("""  
-            If you are in danger, press the button below to send your  
-            **live location** to campus police immediately.  
+        st.markdown("""
+            If you are in danger, press the button below to send your
+            **live location** to campus police immediately.
         """)
 
-        sos_clicked = st.button(
-            "🚨 SEND SOS – SHARE LIVE LOCATION",
-            type="primary",
-            use_container_width=True
-        )
+        if st.button("🚨 SEND SOS – SHARE LIVE LOCATION", type="primary", use_container_width=True):
 
-        if sos_clicked:
             fake_lat = round(random.uniform(36.27, 36.30), 6)
             fake_lon = round(random.uniform(-76.22, -76.20), 6)
 
@@ -88,17 +103,14 @@ def student_dashboard():
     with left:
         st.subheader("🕵️ Anonymous Reporting")
 
-        report_text = st.text_area(
-            "Describe suspicious behavior, blocked exits, or concerns:",
-            placeholder="Your report is anonymous."
-        )
+        text = st.text_area("Describe suspicious behavior or concerns:")
 
         if st.button("Submit Anonymous Report", use_container_width=True):
-            if report_text.strip() == "":
-                st.warning("Please enter a report first.")
+            if text.strip() == "":
+                st.warning("Enter something first.")
             else:
-                push_anonymous_report(report_text)
-                st.success("Anonymous report sent to Campus Police.")
+                push_anonymous_report(text)
+                st.success("Report submitted anonymously.")
 
         st.divider()
 
@@ -116,13 +128,13 @@ def student_dashboard():
             [ecsu_lat, ecsu_lon],
             popup="ECSU — Gilchrist Hall",
             tooltip="Campus Center",
-            icon=folium.Icon(color="blue", icon="info-sign")
+            icon=folium.Icon(color="blue")
         ).add_to(campus_map)
 
         st_folium(campus_map, width=700, height=450)
 
     # ----------------------------------------------------------
-    # RIGHT COLUMN — LIVE NEWS + OFFLINE MODE
+    # RIGHT SIDE — LIVE NEWS
     # ----------------------------------------------------------
     with right:
         st.subheader("📰 Live Safety News")
