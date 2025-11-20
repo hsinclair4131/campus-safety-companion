@@ -3,6 +3,7 @@ import datetime
 import random
 import folium
 from streamlit_folium import st_folium
+from streamlit_autorefresh import st_autorefresh
 
 # Supabase backend
 from supabase_backend import (
@@ -21,17 +22,12 @@ st.set_page_config(
 )
 
 # --------------------------------------------------------------
-# AUTO REFRESH EVERY 5 SECONDS (SAFE METHOD)
-# --------------------------------------------------------------
-st.markdown(
-    "<meta http-equiv='refresh' content='5'>",
-    unsafe_allow_html=True
-)
-
-# --------------------------------------------------------------
 # MAIN STUDENT DASHBOARD
 # --------------------------------------------------------------
 def student_dashboard():
+
+    # 🔄 Auto-refresh every 5 seconds
+    st_autorefresh(interval=5000, key="alert_refresh")
 
     st.title("🛡️ Campus Safety Companion – Student App")
     st.markdown("Your personal safety assistant for ECSU.")
@@ -63,9 +59,9 @@ def student_dashboard():
     with left:
         st.subheader("📍 GPS Emergency SOS")
 
-        st.markdown("""
-            If you are in danger, press the button below to send your
-            **live location** to campus police immediately.
+        st.markdown("""  
+            If you are in danger, press the button below to send your  
+            **live location** to campus police immediately.  
         """)
 
         sos_clicked = st.button(
