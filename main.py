@@ -1,6 +1,6 @@
 import streamlit as st
-from admin_app.admin_app import admin_dashboard
-from student_app.student_app import student_dashboard
+from admin_dashboard_app import admin_dashboard
+from student_dashboard import student_dashboard
 
 # ------------------------------
 # APP SELECTOR
