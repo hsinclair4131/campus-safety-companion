@@ -1,5 +1,5 @@
 import streamlit as st
-from admin_dashboard_app import admin_dashboard
+#from admin_dashboard_app import admin_dashboard
 from student_dashboard import student_dashboard
 
 # ------------------------------
