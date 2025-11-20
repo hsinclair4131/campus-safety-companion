@@ -44,7 +44,7 @@ def student_dashboard():
         st.divider()
 
     # ----------------------------------------------------------
-    # SOS BUTTON
+    # FIXED SOS BUTTON (NO AUTO-FIRE)
     # ----------------------------------------------------------
     with left:
         st.subheader("📍 GPS Emergency SOS")
@@ -54,13 +54,20 @@ def student_dashboard():
             **live location** to campus police immediately.
         """)
 
-        sos_clicked = st.button(
+        # Initialize session state
+        if "sos_triggered" not in st.session_state:
+            st.session_state.sos_triggered = False
+
+        # Button (sets session flag)
+        if st.button(
             "🚨 SEND SOS – SHARE LIVE LOCATION",
             type="primary",
             use_container_width=True
-        )
+        ):
+            st.session_state.sos_triggered = True
 
-        if sos_clicked:
+        # Execute SOS ONLY when triggered, and ONLY once
+        if st.session_state.sos_triggered:
             fake_lat = round(random.uniform(36.27, 36.30), 6)
             fake_lon = round(random.uniform(-76.22, -76.20), 6)
 
@@ -69,6 +76,9 @@ def student_dashboard():
             st.error("🚨 SOS SENT TO CAMPUS POLICE!")
             st.code(f"Latitude: {fake_lat}\nLongitude: {fake_lon}")
             st.write("⏱️ Timestamp:", datetime.datetime.now())
+
+            # Reset flag so reruns don't fire again
+            st.session_state.sos_triggered = False
 
         st.divider()
 
@@ -139,6 +149,7 @@ def student_dashboard():
 
     st.divider()
     st.caption("© 2025 ECSU Campus Safety Companion – Student Application")
+
 
 if __name__ == "__main__":
     student_dashboard()
