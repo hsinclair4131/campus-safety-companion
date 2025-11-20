@@ -35,7 +35,6 @@ def student_dashboard():
         if latest_alert:
             alert_text = latest_alert.get("message", "No message")
             alert_time = latest_alert.get("timestamp", "")
-
             st.error(f"🔴 **{alert_text}**")
             st.caption(f"⏱️ {alert_time}")
         else:
@@ -44,41 +43,46 @@ def student_dashboard():
         st.divider()
 
     # ----------------------------------------------------------
-    # FIXED SOS BUTTON (NO AUTO-FIRE)
+    # GPS EMERGENCY SOS (FINAL PRODUCTION VERSION)
     # ----------------------------------------------------------
     with left:
         st.subheader("📍 GPS Emergency SOS")
-
         st.markdown("""
             Press the button below to send your
             **live location** to campus police immediately.
         """)
 
-        # Initialize session state
-        if "sos_triggered" not in st.session_state:
-            st.session_state.sos_triggered = False
+        # Initialize session flag
+        if "sos_trigger" not in st.session_state:
+            st.session_state["sos_trigger"] = False
 
-        # Button (sets session flag)
+        # The SOS button — only sets the flag, then reruns
         if st.button(
             "🚨 SEND SOS – SHARE LIVE LOCATION",
             type="primary",
             use_container_width=True
         ):
-            st.session_state.sos_triggered = True
+            st.session_state["sos_trigger"] = True
+            st.experimental_rerun()
 
-        # Execute SOS ONLY when triggered, and ONLY once
-        if st.session_state.sos_triggered:
+        # Execute SOS ONLY when triggered
+        if st.session_state.get("sos_trigger", False):
+
+            # ---- CRITICAL FIX ----
+            # Clear the trigger BEFORE running push_sos()
+            st.session_state["sos_trigger"] = False
+
+            # Fake GPS (placeholder until real GPS sensor)
             fake_lat = round(random.uniform(36.27, 36.30), 6)
             fake_lon = round(random.uniform(-76.22, -76.20), 6)
 
+            # Send to Supabase
             push_sos(fake_lat, fake_lon)
 
+            # Display confirmation
             st.error("🚨 SOS SENT TO CAMPUS POLICE!")
             st.code(f"Latitude: {fake_lat}\nLongitude: {fake_lon}")
             st.write("⏱️ Timestamp:", datetime.datetime.now())
-
-            # Reset flag so reruns don't fire again
-            st.session_state.sos_triggered = False
 
         st.divider()
 
@@ -150,6 +154,6 @@ def student_dashboard():
     st.divider()
     st.caption("© 2025 ECSU Campus Safety Companion – Student Application")
 
-
 if __name__ == "__main__":
     student_dashboard()
+
