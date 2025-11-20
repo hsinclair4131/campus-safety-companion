@@ -1,7 +1,13 @@
 import streamlit as st
-from firebase_admin import firestore
+import pandas as pd
+from datetime import datetime
 
-db = firestore.client()
+# --- Supabase Backend ---
+from supabase_backend import (
+    get_all_sos,
+    get_anonymous_reports,
+    push_admin_alert,
+)
 
 # --- Tactical Page Config ---
 st.set_page_config(
@@ -21,10 +27,6 @@ body {
 [data-testid="stSidebar"] {
     background-color: #161b22 !important;
     border-right: 1px solid #1f6feb;
-}
-
-[data-testid="stSidebar"] .css-1v0mbdj {
-    color: #e6edf3 !important;
 }
 
 .sidebar-text {
@@ -62,22 +64,27 @@ st.markdown("## 🛰️ Tactical Operations Dashboard")
 st.markdown("<span class='success-text'>You are logged in. Authorization Level: ADMIN-1</span>", unsafe_allow_html=True)
 st.write("---")
 
+# --- Load Supabase Data ---
+sos_data = get_all_sos() or []
+incident_logs = get_anonymous_reports() or []
+
+drone_count = 0               # placeholder (no drone table yet)
+student_count = 0             # placeholder (add table if needed)
+alert_count = len(sos_data)   # active SOS alerts
+
 # --- Metrics Row ---
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.markdown("<div class='metric-box'><h4>Total Drones</h4>", unsafe_allow_html=True)
-    drone_count = len(list(db.collection("drones").stream()))
     st.markdown(f"<div class='metric-value'>{drone_count}</div></div>", unsafe_allow_html=True)
 
 with col2:
     st.markdown("<div class='metric-box'><h4>Registered Students</h4>", unsafe_allow_html=True)
-    student_count = len(list(db.collection("students").stream()))
     st.markdown(f"<div class='metric-value'>{student_count}</div></div>", unsafe_allow_html=True)
 
 with col3:
     st.markdown("<div class='metric-box'><h4>Active SOS Alerts</h4>", unsafe_allow_html=True)
-    alert_count = len(list(db.collection("sos_alerts").stream()))
     st.markdown(f"<div class='metric-value' style='color:#ff4747;'>{alert_count}</div></div>", unsafe_allow_html=True)
 
 with col4:
@@ -88,4 +95,25 @@ st.write("---")
 
 # --- Activity Log Preview ---
 st.markdown("### 📝 Recent Activity")
-st.info("Activity Logs module under construction. Full log feed coming soon.")
+
+if len(incident_logs) == 0:
+    st.info("No incident reports yet.")
+else:
+    df = pd.DataFrame([
+        {"Timestamp": log["timestamp"], "Report": log["report"]}
+        for log in incident_logs
+    ])
+    st.table(df)
+
+st.write("---")
+
+# Admin Message Sender (Optional)
+st.markdown("### 📢 Send Tactical Broadcast Alert")
+msg = st.text_input("Enter tactical alert message:")
+
+if st.button("Send Tactical Alert"):
+    if msg.strip():
+        push_admin_alert(msg)
+        st.success("🔥 Tactical Alert Broadcasted")
+    else:
+        st.warning("Please type a message first.")
