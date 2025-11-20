@@ -1,35 +1,42 @@
-import firebase_admin
-from firebase_admin import auth, firestore
+import streamlit as st
+from supabase_backend import supabase
 
-# Lazy-loaded Firestore client (so it doesn't crash before firebase_init runs)
-_db = None
+# ------------------------------------------------------
+# ADMIN AUTH USING SUPABASE ONLY
+# ------------------------------------------------------
 
-def get_db():
-    global _db
-    if _db is None:
-        # Firestore only works AFTER firebase_init() has run in main.py
-        _db = firestore.client()
-    return _db
-
-
-def firebase_login(email, password):
+def supabase_login(email, password):
     """
-    Login admin via Firebase Authentication + Firestore admin_users validation.
+    Logs in via Supabase authentication table + admin_users table.
+    Returns user record if authorized, otherwise None.
     """
+
     try:
-        # Firebase Authentication lookup
-        user = auth.get_user_by_email(email)
-        uid = user.uid
+        # 1. Try to authenticate via Supabase Auth
+        auth_result = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password
+        })
 
-        # Check admin authorization in Firestore
-        db = get_db()
-        admin_doc = db.collection("admin_users").document(uid).get()
+        if not auth_result or "user" not in auth_result:
+            return None
 
-        if not admin_doc.exists:
-            return None  # Not an authorized admin
+        user = auth_result["user"]
+        uid = user["id"]
 
-        return uid  # Success
+        # 2. Check if the user is in the admin_users table
+        admin_check = (
+            supabase.table("admin_users")
+            .select("*")
+            .eq("uid", uid)
+            .execute()
+        )
+
+        if not admin_check.data:
+            return None  # Not an admin
+
+        return uid  # Authorized admin
 
     except Exception as e:
-        print("LOGIN ERROR:", e)
+        print("SUPABASE LOGIN ERROR:", e)
         return None
