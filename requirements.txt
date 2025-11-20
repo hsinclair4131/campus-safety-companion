@@ -6,3 +6,4 @@ Pillow
 firebase-admin
 supabase
 fastapi
+streamlit-autorefresh
