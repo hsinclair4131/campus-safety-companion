@@ -1,15 +1,15 @@
-# ADMIN DASHBOARD APP — FULL BACKEND INTEGRATED
+# ADMIN DASHBOARD (SUPABASE BACKEND VERSION)
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# 🔥 IMPORT FIREBASE BACKEND
-from firebase_backend import (
-    push_alert,
+# 🔥 IMPORT SUPABASE BACKEND (NOT FIREBASE)
+from supabase_backend import (
+    push_admin_alert,     # replaces push_alert
     get_latest_alert,
     push_sos,
-    get_all_sos,
-    get_anonymous_reports
+    get_all_sos,          # NEW — we will define below
+    get_anonymous_reports # NEW — we will define below
 )
 
 # ------------------------------------------------------
@@ -29,27 +29,26 @@ st.set_page_config(
 )
 
 # ------------------------------------------------------
-# TITLE + HEADER
+# HEADER
 # ------------------------------------------------------
 st.title("🚨 CSC Admin Command Center")
 st.markdown("### ECSU Police Department • Real-Time Oversight Dashboard")
 st.markdown("---")
 
 # ------------------------------------------------------
+# LOAD DATA FROM SUPABASE
+# ------------------------------------------------------
+sos_data = get_all_sos() or []
+incident_logs = get_anonymous_reports() or []
+
+active_sos_count = len(sos_data)
+tracked_students = active_sos_count
+incident_count = len(incident_logs)
+
+# ------------------------------------------------------
 # METRICS ROW
 # ------------------------------------------------------
 col1, col2, col3 = st.columns(3)
-
-# SOS alerts – REAL DATA COUNT
-sos_data = get_all_sos()
-active_sos_count = len(sos_data)
-
-# Students being tracked (currently same as SOS count)
-tracked_students = active_sos_count
-
-# Incident logs from anonymous reports
-incident_logs = get_anonymous_reports()
-incident_count = len(incident_logs)
 
 with col1:
     st.metric("Active SOS Alerts", active_sos_count)
@@ -63,7 +62,7 @@ with col3:
 st.markdown("---")
 
 # ------------------------------------------------------
-#  🔥 REAL-TIME SOS FEED
+# LIVE SOS FEED
 # ------------------------------------------------------
 st.markdown("### 🚨 Live SOS Alerts Feed")
 
@@ -79,7 +78,7 @@ else:
 st.markdown("---")
 
 # ------------------------------------------------------
-#  🔥 SEND MANUAL ADMIN ALERT (BRODCAST TO STUDENT APP)
+# SEND MANUAL BROADCAST ALERT (USES SUPABASE)
 # ------------------------------------------------------
 st.markdown("### 📢 Send Emergency Broadcast Alert")
 
@@ -87,7 +86,7 @@ alert_message = st.text_input("Enter alert message:")
 
 if st.button("Send Broadcast Alert"):
     if alert_message.strip():
-        push_alert(alert_message)
+        push_admin_alert(alert_message)  # SUPABASE VERSION
         st.success("🔥 ALERT BROADCASTED TO STUDENTS (LIVE)")
     else:
         st.warning("Please enter a message before sending.")
@@ -95,39 +94,24 @@ if st.button("Send Broadcast Alert"):
 st.markdown("---")
 
 # ------------------------------------------------------
-#  🔥 GPS MAP PLACEHOLDER (NEXT STEP: LIVE LOCATION MAP)
-# ------------------------------------------------------
-st.markdown("### 📍 GPS Tracking Map")
-
-st.info("""
-Live map will show real-time student emergency locations.\n
-Next step: Integrate Folium or PyDeck with Firestore sos_reports.
-""")
-
-st.markdown("---")
-
-# ------------------------------------------------------
-#  🔥 REAL INCIDENT LOG PREVIEW
+# INCIDENT LOG PREVIEW
 # ------------------------------------------------------
 st.markdown("### 📝 Recent Incident Reports (Anonymous)")
 
 if len(incident_logs) == 0:
     st.info("No reports submitted yet.")
 else:
-    table_data = []
-    for log in incident_logs:
-        table_data.append({
+    df = pd.DataFrame([
+        {
             "Timestamp": log.get("timestamp", ""),
             "Report": log.get("report", "")
-        })
-    
-    df = pd.DataFrame(table_data)
+        }
+        for log in incident_logs
+    ])
     st.table(df)
 
 st.caption("Incident logs update in real time as students submit reports.")
 
-# ------------------------------------------------------
-# FOOTER
-# ------------------------------------------------------
 st.markdown("---")
-st.markdown("##### CSC Admin Dashboard • Connected to Live Firebase Backend")
+st.markdown("##### CSC Admin Dashboard • Connected to Supabase Backend")
+
